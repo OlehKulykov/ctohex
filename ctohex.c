@@ -34,7 +34,7 @@ void write_file_buff(FILE * f, const uint8_t * buff, long long buffSize) {
         written += 16;
         buff += 16;
     }
-    if (written > 0) {
+    if (written > 0 && written < buffSize) {
         fwrite(",\n", 2, 1, f);
     }
     first = 1;
@@ -64,76 +64,27 @@ int write_as_zlib(void) {
         return 2;
     }
     
-    char str1[1024];
-    char str2[1024];
-    char str3[128];
-    char str4[128];
+    char str1[4096];
     sprintf(str1, "file__%s_1.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
     
-    sprintf(str3, "FILE__%s_SIZE", _lower_case_file_name);
-    sprintf(str4, "FILE__%s_C_SIZE", _lower_case_file_name);
-    
-    sprintf(str2, "// %s\n", _original_file_name);
-    write_str(outFile, str2);
-    
-    sprintf(str1, "#ifndef %s\n", str3);
+    sprintf(str1, "// %s\n", _original_file_name);
     write_str(outFile, str1);
     
-    sprintf(str1, "#define %s %lli\n", str3, _in_file_size);
-    write_str(outFile, str1);
-    sprintf(str1, "#define %s %llu\n", str4, (unsigned long long)dstSize);
+    sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
     write_str(outFile, str1);
     
-    write_str(outFile, "#if defined(__cplusplus)\n");
-    
-    sprintf(str2, "FILE__%s", _lower_case_file_name);
-    sprintf(str1, "extern \"C\" unsigned char %s[%s];\n", str2, str4);
+    sprintf(str1, "#define FILE__%s_C_SIZE %llu\n", _lower_case_file_name, (unsigned long long)dstSize);
     write_str(outFile, str1);
     
-    //sprintf(str1, "extern \"C\" bool %s_write_to_path(const char *);\n", str2);
-    //write_str(outFile, str1);
-    
-    write_str(outFile, "#else\n");
-    
-    sprintf(str2, "FILE__%s", _lower_case_file_name);
-    sprintf(str1, "#include <stdbool.h>\nunsigned char %s[%s];\n", str2, str4);
-    write_str(outFile, str1);
-
-//    sprintf(str1, "extern bool %s_copy_to_buff(const char *);\n", str2);
-//    write_str(outFile, str1);
-    
-    write_str(outFile, "#endif\n");
-    
-    write_str(outFile, "#else\n");
-    sprintf(str1, "unsigned char %s[%s]={\n", str2, str4);
+    sprintf(str1, "static unsigned char FILE__%s[%llu]={\n", _lower_case_file_name, (unsigned long long)dstSize);
     write_str(outFile, str1);
     
     write_file_buff(outFile, dstBuff, dstSize);
     
-//    sprintf(str2, "FILE__%s", _lower_case_file_name);
-//    sprintf(str1, "};\nunsigned char * %s_PTR=%s;\n", str2, str2);
-    write_str(outFile, "};\n#endif\n\n");
-    
-//    sprintf(str1, "bool %s_write_to_path(const char * path) {\n", str2);
-//    write_str(outFile, str1);
-//
-//    write_str(outFile, "    FILE * f = fopen(path, \"w+b\");\n    if (f) {\n");
-//
-//    sprintf(str1, "        const size_t w = fwrite(%s_PTR, 1, %s_SIZE, f);\n", str2, str2);
-//    write_str(outFile, str1);
-//
-//    write_str(outFile, "        fclose(f);\n");
-//
-//    sprintf(str1, "        return w == %s_SIZE;\n", str2);
-//    write_str(outFile, str1);
-//
-//    write_str(outFile, "    }\n    return false;\n}\n#endif\n\n");
-    
-    write_str(outFile, "\n\n");
-    
+    write_str(outFile, "};\n#endif\n");
+
     fclose(outFile);
-    
     free(dstBuff);
     return 0;
 }
@@ -152,74 +103,25 @@ int write_as_zstd(void) {
         return 3;
     }
     
-    char str1[1024];
-    char str2[1024];
-    char str3[128];
-    char str4[128];
+    char str1[4096];
     sprintf(str1, "file__%s_2.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
     
-    sprintf(str3, "FILE__%s_SIZE", _lower_case_file_name);
-    sprintf(str4, "FILE__%s_C_SIZE", _lower_case_file_name);
-    
-    sprintf(str2, "// %s\n", _original_file_name);
-    write_str(outFile, str2);
-    
-    sprintf(str1, "#ifndef %s\n", str3);
+    sprintf(str1, "// %s\n", _original_file_name);
     write_str(outFile, str1);
     
-    sprintf(str1, "#define %s %lli\n", str3, _in_file_size);
-    write_str(outFile, str1);
-    sprintf(str1, "#define %s %llu\n", str4, (unsigned long long)dstSize);
+    sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
     write_str(outFile, str1);
     
-    write_str(outFile, "#if defined(__cplusplus)\n");
-    
-    sprintf(str2, "FILE__%s", _lower_case_file_name);
-    sprintf(str1, "extern \"C\" unsigned char %s[%s];\n", str2, str4);
+    sprintf(str1, "#define FILE__%s_C_SIZE %llu\n", _lower_case_file_name, (unsigned long long)dstSize);
     write_str(outFile, str1);
     
-    //sprintf(str1, "extern \"C\" bool %s_write_to_path(const char *);\n", str2);
-    //write_str(outFile, str1);
-    
-    write_str(outFile, "#else\n");
-    
-    sprintf(str2, "FILE__%s", _lower_case_file_name);
-    sprintf(str1, "#include <stdbool.h>\nunsigned char %s[%s];\n", str2, str4);
-    write_str(outFile, str1);
-
-//    sprintf(str1, "extern bool %s_copy_to_buff(const char *);\n", str2);
-//    write_str(outFile, str1);
-    
-    write_str(outFile, "#endif\n");
-    
-    write_str(outFile, "#else\n");
-    sprintf(str1, "unsigned char %s[%s]={\n", str2, str4);
+    sprintf(str1, "static unsigned char FILE__%s[%llu]={\n", _lower_case_file_name, (unsigned long long)dstSize);
     write_str(outFile, str1);
     
     write_file_buff(outFile, dstBuff, dstSize);
     
-//    sprintf(str2, "FILE__%s", _lower_case_file_name);
-//    sprintf(str1, "};\nunsigned char * %s_PTR=%s;\n", str2, str2);
-    write_str(outFile, "};\n#endif\n\n");
-    
-//    sprintf(str1, "bool %s_write_to_path(const char * path) {\n", str2);
-//    write_str(outFile, str1);
-//
-//    write_str(outFile, "    FILE * f = fopen(path, \"w+b\");\n    if (f) {\n");
-//
-//    sprintf(str1, "        const size_t w = fwrite(%s_PTR, 1, %s_SIZE, f);\n", str2, str2);
-//    write_str(outFile, str1);
-//
-//    write_str(outFile, "        fclose(f);\n");
-//
-//    sprintf(str1, "        return w == %s_SIZE;\n", str2);
-//    write_str(outFile, str1);
-//
-//    write_str(outFile, "    }\n    return false;\n}\n#endif\n\n");
-    
-    write_str(outFile, "\n\n");
-    
+    write_str(outFile, "};\n#endif\n");
     
     fclose(outFile);
     free(dstBuff);
@@ -228,67 +130,22 @@ int write_as_zstd(void) {
 }
 
 int write_as_is(void) {
-    char str1[1024];
-    char str2[1024];
-    char str3[128];
+    char str1[4096];
     sprintf(str1, "file__%s.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
     
-    sprintf(str3, "FILE__%s_SIZE", _lower_case_file_name);
-    
-    sprintf(str2, "// %s\n", _original_file_name);
-    write_str(outFile, str2);
-    
-    sprintf(str1, "#ifndef %s\n", str3);
+    sprintf(str1, "// %s\n", _original_file_name);
     write_str(outFile, str1);
     
-    sprintf(str1, "#define %s %lli\n", str3, _in_file_size);
+    sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
     write_str(outFile, str1);
     
-    write_str(outFile, "#if defined(__cplusplus)\n");
-    
-    sprintf(str2, "FILE__%s", _lower_case_file_name);
-    sprintf(str1, "extern \"C\" unsigned char %s[%s];\nextern \"C\" unsigned char * %s_PTR;\n", str2, str3, str2);
-    write_str(outFile, str1);
-    
-    sprintf(str1, "extern \"C\" bool %s_write_to_path(const char *);\n", str2);
-    write_str(outFile, str1);
-    
-    write_str(outFile, "#else\n");
-    
-    sprintf(str2, "FILE__%s", _lower_case_file_name);
-    sprintf(str1, "#include <stdbool.h>\nextern unsigned char %s[%s];\nextern unsigned char * %s_PTR;\n", str2, str3, str2);
-    write_str(outFile, str1);
-
-    sprintf(str1, "extern bool %s_write_to_path(const char *);\n", str2);
-    write_str(outFile, str1);
-    
-    write_str(outFile, "#endif\n");
-    
-    write_str(outFile, "#else\n");
-    sprintf(str1, "unsigned char %s[%s]={\n", str2, str3);
+    sprintf(str1, "static unsigned char FILE__%s[%lli]={\n", _lower_case_file_name, _in_file_size);
     write_str(outFile, str1);
     
     write_file_buff(outFile, _in_file_buff, _in_file_size);
     
-    sprintf(str2, "FILE__%s", _lower_case_file_name);
-    sprintf(str1, "};\nunsigned char * %s_PTR=%s;\n", str2, str2);
-    write_str(outFile, str1);
-    
-    sprintf(str1, "bool %s_write_to_path(const char * path) {\n", str2);
-    write_str(outFile, str1);
-    
-    write_str(outFile, "    FILE * f = fopen(path, \"w+b\");\n    if (f) {\n");
-    
-    sprintf(str1, "        const size_t w = fwrite(%s_PTR, 1, %s_SIZE, f);\n", str2, str2);
-    write_str(outFile, str1);
-    
-    write_str(outFile, "        fclose(f);\n");
-    
-    sprintf(str1, "        return w == %s_SIZE;\n", str2);
-    write_str(outFile, str1);
-    
-    write_str(outFile, "    }\n    return false;\n}\n#endif\n\n");
+    write_str(outFile, "};\n#endif\n");
     
     fclose(outFile);
     return 0;
@@ -321,6 +178,9 @@ int main(int argc, const char * argv[]) {
                 break;
         }
     }
+    
+    sprintf(_original_file_name, "LICENSE");
+    sprintf(_lower_case_file_name, "license");
     
     FILE * inFile = fopen(_original_file_name, "rb");
     fseek(inFile, 0, SEEK_END);
