@@ -24,8 +24,6 @@ message("zstd libraries: ${zstd_LIBRARIES}")
 include_directories(BEFORE SYSTEM ${ZLIB_INCLUDE_DIRS})
 include_directories(BEFORE SYSTEM ${zstd_INCLUDE_DIRS})
 
-add_definitions(-DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR})
-
 # ---- sources & headers ----
 
 set(CTOHEX_HEADERS
