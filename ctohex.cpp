@@ -1,4 +1,11 @@
 
+#include <exception>
+#include <string>
+#include <vector>
+
+#include "TPL1Fl.hpp"
+#include "TPL2Fl.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,6 +71,13 @@ int write_as_zlib(void) {
         return 2;
     }
     
+    TPL1Fl<size_t> tpl;
+    auto test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
+    if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
+        return 5;
+    }
+    test.clear();
+    
     char str1[4096];
     sprintf(str1, "file__%s_1.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
@@ -74,7 +88,7 @@ int write_as_zlib(void) {
     sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
     write_str(outFile, str1);
     
-    sprintf(str1, "#define FILE__%s_C_SIZE %llu\n", _lower_case_file_name, (unsigned long long)dstSize);
+    sprintf(str1, "#define FILE__%s_SIZE_C %llu\n", _lower_case_file_name, (unsigned long long)dstSize);
     write_str(outFile, str1);
     
     sprintf(str1, "static unsigned char FILE__%s[%llu]={\n", _lower_case_file_name, (unsigned long long)dstSize);
@@ -107,6 +121,13 @@ int write_as_zstd(void) {
         return 3;
     }
     
+    TPL2Fl<size_t> tpl;
+    auto test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
+    if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
+        return 4;
+    }
+    test.clear();
+    
     char str1[4096];
     sprintf(str1, "file__%s_2.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
@@ -117,7 +138,7 @@ int write_as_zstd(void) {
     sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
     write_str(outFile, str1);
     
-    sprintf(str1, "#define FILE__%s_C_SIZE %llu\n", _lower_case_file_name, (unsigned long long)dstSize);
+    sprintf(str1, "#define FILE__%s_SIZE_C %llu\n", _lower_case_file_name, (unsigned long long)dstSize);
     write_str(outFile, str1);
     
     sprintf(str1, "static unsigned char FILE__%s[%llu]={\n", _lower_case_file_name, (unsigned long long)dstSize);

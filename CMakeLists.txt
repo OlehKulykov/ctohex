@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
-project(ctohex LANGUAGES C)
+project(ctohex LANGUAGES C CXX)
 
 set(CTOHEX_APP ctohex)
 
@@ -28,17 +28,21 @@ include_directories(BEFORE SYSTEM ${zstd_INCLUDE_DIRS})
 # ---- sources & headers ----
 
 set(CTOHEX_HEADERS
+  TPL1Fl.hpp
+  TPL2Fl.hpp
 )
 
 set(CTOHEX_SOURCES
-  ctohex.c
+  ctohex.cpp
 )
 
 # ---- groups ----
 
 source_group("main"
   FILES
-  ctohex.c
+  ctohex.cpp
+  TPL1Fl.hpp
+  TPL2Fl.hpp
  )
 
 add_executable(${CTOHEX_APP} ${CTOHEX_HEADERS} ${CTOHEX_SOURCES})
