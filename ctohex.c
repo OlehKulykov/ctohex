@@ -84,6 +84,10 @@ int write_as_zlib(void) {
     
     write_str(outFile, "};\n#endif\n");
 
+//    printf("--- zlib:\n");
+//    for (uLong i = 0; i < dstSize; i++) { printf("%c", (char)dstBuff[i]); }
+//    printf("\n");
+    
     fclose(outFile);
     free(dstBuff);
     return 0;
@@ -122,6 +126,10 @@ int write_as_zstd(void) {
     write_file_buff(outFile, dstBuff, dstSize);
     
     write_str(outFile, "};\n#endif\n");
+    
+//    printf("--- zstd:\n");
+//    for (size_t i = 0; i < dstSize; i++) { printf("%c", (char)dstBuff[i]); }
+//    printf("\n");
     
     fclose(outFile);
     free(dstBuff);
