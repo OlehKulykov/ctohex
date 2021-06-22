@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "TPL1Fl.hpp"
-#include "TPL2Fl.hpp"
+#include "tpl1fl.hpp"
+#include "tpl2fl.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,25 +64,34 @@ int write_as_zlib(void) {
     uLong buffSize = compressBound((uLong)_in_file_size);
     buffSize += 256 * 1024;
     uint8_t * dstBuff = (uint8_t *)malloc(buffSize);
+    if (!dstBuff) {
+        printf("Can't allocate memory.\n");
+        return 1;
+    }
     uLong dstSize = buffSize;
     int res = compress2(dstBuff, &dstSize, _in_file_buff, _in_file_size, Z_BEST_COMPRESSION);
     if (res != Z_OK) {
         free(dstBuff);
-        return 2;
+        return 1;
     }
     
     TPL1Fl<size_t> tpl;
     std::vector<uint8_t> test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
     if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
-        return 5;
+        return 1;
     }
     test.clear();
     
     char str1[4096];
     sprintf(str1, "file__%s_1.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
+    if (!outFile) {
+        free(dstBuff);
+        printf("Can't open output file.\n");
+        return 1;
+    }
     
-    sprintf(str1, "// %s\n", _original_file_name);
+    sprintf(str1, "//1 %s\n", _original_file_name);
     write_str(outFile, str1);
     
     sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
@@ -112,27 +121,38 @@ int write_as_zstd(void) {
     size_t buffSize = ZSTD_compressBound(_in_file_size);
     buffSize += 256 * 1024;
     uint8_t * dstBuff = (uint8_t *)malloc(buffSize);
+    if (!dstBuff) {
+        printf("Can't allocate memory.\n");
+        return 1;
+    }
     size_t dstSize = ZSTD_compressCCtx(cctx,
                                        dstBuff, buffSize,
                                        _in_file_buff, _in_file_size,
                                        19);
     if (ZSTD_isError(dstSize)) {
+        free(dstBuff);
         ZSTD_freeCCtx(cctx);
-        return 3;
+        return 1;
     }
     
     TPL2Fl<size_t> tpl;
     std::vector<uint8_t> test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
     if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
-        return 4;
+        return 1;
     }
     test.clear();
     
     char str1[4096];
     sprintf(str1, "file__%s_2.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
+    if (!outFile) {
+        free(dstBuff);
+        ZSTD_freeCCtx(cctx);
+        printf("Can't open output file.\n");
+        return 1;
+    }
     
-    sprintf(str1, "// %s\n", _original_file_name);
+    sprintf(str1, "//2 %s\n", _original_file_name);
     write_str(outFile, str1);
     
     sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
@@ -162,8 +182,12 @@ int write_as_is(void) {
     char str1[4096];
     sprintf(str1, "file__%s.h", _lower_case_file_name);
     FILE * outFile = fopen(str1, "w+b");
+    if (!outFile) {
+        printf("Can't open output file.\n");
+        return 1;
+    }
     
-    sprintf(str1, "// %s\n", _original_file_name);
+    sprintf(str1, "//0 %s\n", _original_file_name);
     write_str(outFile, str1);
     
     sprintf(str1, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
@@ -180,6 +204,13 @@ int write_as_is(void) {
     return 0;
 }
 
+void cleanup(void) {
+    if (_in_file_buff) {
+        free(_in_file_buff);
+        _in_file_buff = NULL;
+    }
+}
+
 int main(int argc, const char * argv[]) {
     for (int i = 0; i < argc; i++) {
         switch (i) {
@@ -192,6 +223,7 @@ int main(int argc, const char * argv[]) {
                         case ' ':
                         case '/':
                         case '\\':
+                        case '-':
                             *s2++ = '_';
                             break;
                         default:
@@ -208,10 +240,21 @@ int main(int argc, const char * argv[]) {
         }
     }
     
+    if (strlen(_original_file_name) == 0 || strlen(_lower_case_file_name) == 0) {
+        cleanup();
+        printf("No input file.\n");
+        return 0;
+    }
+    
     //sprintf(_original_file_name, "");
     //sprintf(_lower_case_file_name, "");
     
     FILE * inFile = fopen(_original_file_name, "rb");
+    if (!inFile) {
+        cleanup();
+        printf("Can't open file for reading.\n");
+        return 1;
+    }
     fseek(inFile, 0, SEEK_END);
     _in_file_size = ftell(inFile);
     fseek(inFile, 0, SEEK_SET);
@@ -219,23 +262,28 @@ int main(int argc, const char * argv[]) {
     size_t srcSize = fread(_in_file_buff, 1, _in_file_size, inFile);
     fclose(inFile);
     if (srcSize != _in_file_size) {
+        cleanup();
         printf("Can't read file.\n");
         return 1;
     }
     
     int res;
     if ( (res = write_as_is()) != 0) {
+        cleanup();
         return res;
     }
     
     if ( (res = write_as_zlib()) != 0) {
+        cleanup();
         return res;
     }
     
     if ( (res = write_as_zstd()) != 0) {
+        cleanup();
         return res;
     }
     
+    cleanup();
     printf("Done\n");
     return 0;
 }

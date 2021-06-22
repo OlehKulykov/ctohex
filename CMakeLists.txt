@@ -27,8 +27,8 @@ include_directories(BEFORE SYSTEM ${zstd_INCLUDE_DIRS})
 # ---- sources & headers ----
 
 set(CTOHEX_HEADERS
-  TPL1Fl.hpp
-  TPL2Fl.hpp
+  tpl1fl.hpp
+  tpl2fl.hpp
 )
 
 set(CTOHEX_SOURCES
@@ -40,8 +40,8 @@ set(CTOHEX_SOURCES
 source_group("main"
   FILES
   ctohex.cpp
-  TPL1Fl.hpp
-  TPL2Fl.hpp
+  tpl1fl.hpp
+  tpl2fl.hpp
  )
 
 add_executable(${CTOHEX_APP} ${CTOHEX_HEADERS} ${CTOHEX_SOURCES})
