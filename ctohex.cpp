@@ -72,7 +72,7 @@ int write_as_zlib(void) {
     }
     
     TPL1Fl<size_t> tpl;
-    auto test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
+    std::vector<uint8_t> test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
     if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
         return 5;
     }
@@ -122,7 +122,7 @@ int write_as_zstd(void) {
     }
     
     TPL2Fl<size_t> tpl;
-    auto test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
+    std::vector<uint8_t> test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
     if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
         return 4;
     }
@@ -208,8 +208,8 @@ int main(int argc, const char * argv[]) {
         }
     }
     
-    sprintf(_original_file_name, "LICENSE");
-    sprintf(_lower_case_file_name, "license");
+    //sprintf(_original_file_name, "");
+    //sprintf(_lower_case_file_name, "");
     
     FILE * inFile = fopen(_original_file_name, "rb");
     fseek(inFile, 0, SEEK_END);

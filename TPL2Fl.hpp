@@ -13,7 +13,7 @@ public:
     std::vector<uint8_t> vectorize(const void * inBuff, const T inSize, const T outSize) {
         std::vector<uint8_t> v;
         const size_t dstCapacity = ZSTD_getDecompressedSize(inBuff, inSize);
-        if (dstCapacity && !ZSTD_isError(dstCapacity)) {
+        if (dstCapacity > 0 && !ZSTD_isError(dstCapacity)) {
             v.resize(dstCapacity);
             const size_t dstSize = ZSTD_decompressDCtx(_dctx, v.data(), dstCapacity, inBuff, inSize);
             if (ZSTD_isError(dstSize) || dstSize != outSize) {
