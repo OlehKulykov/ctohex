@@ -8,7 +8,7 @@
 template<typename T>
 struct TPL1Fl {
 public:
-#if defined(__R2D9_RAW_HEAP_MEMORY_HPP__) && (__R2D9_RAW_HEAP_MEMORY_HPP__ > 0)
+#if defined(__R2D9_RAW_HEAP_MEMORY_HPP__) && (__R2D9_RAW_HEAP_MEMORY_HPP__ == 1)
     r2d9::RawHeapMemory memorize(const Bytef * inBuff, const T inSize, const T outSize) {
         r2d9::RawHeapMemory v;
         v.resize(outSize);
