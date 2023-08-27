@@ -29,9 +29,9 @@ void write_file_buff(FILE * f, const uint8_t * buff, long long buffSize) {
     for (long long j = 0; j < (buffSize / 16); j++) {
         const char * format;
         if (first) {
-            format = "0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x";
+            format = "0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X";
         } else {
-            format = ",\n0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x";
+            format = ",\n0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X";
         }
         first = 0;
         const int strLen = sprintf(str1, format,
@@ -48,9 +48,9 @@ void write_file_buff(FILE * f, const uint8_t * buff, long long buffSize) {
     while (written < buffSize) {
         const char * format;
         if (first) {
-            format = "0x%02x";
+            format = "0x%02X";
         } else {
-            format = ",0x%02x";
+            format = ",0x%02X";
         }
         first = 0;
         const int strLen = sprintf(str1, format, *buff);
@@ -78,6 +78,7 @@ int write_as_zlib(void) {
     TPL1Fl<size_t> tpl;
     std::vector<uint8_t> test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
     if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
+        printf("ERROR: Test zlib result.\n");
         return 1;
     }
     test.clear();
@@ -138,6 +139,7 @@ int write_as_zstd(void) {
     TPL2Fl<size_t> tpl;
     std::vector<uint8_t> test = tpl.vectorize(dstBuff, dstSize, _in_file_size);
     if (test.size() != _in_file_size || memcmp(test.data(), _in_file_buff, _in_file_size)) {
+        printf("ERROR: Test zstd result.\n");
         return 1;
     }
     test.clear();
