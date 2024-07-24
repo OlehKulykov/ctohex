@@ -158,10 +158,5 @@ add_test(
 
 add_test(
   NAME "SelfProcess"
-  COMMAND $<TARGET_FILE:${CTOHEX_APP}> ${CTOHEX_APP}
-)
-
-add_test(
-  NAME "DoubleIncludeWithAllArgs"
-  COMMAND $<TARGET_FILE:${CTOHEX_APP}> -dnwr Makefile
+  COMMAND $<TARGET_FILE:${CTOHEX_APP}> -dnwr $<TARGET_FILE:${CTOHEX_APP}>
 )

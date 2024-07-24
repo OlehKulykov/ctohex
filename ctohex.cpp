@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <locale.h>
 
 #if !defined(__has_include)
 #define __has_include 0
@@ -564,17 +565,10 @@ int main(int argc, const char * argv[]) {
             //const char * s1 = "config.json";
             char * s2 = _lower_case_file_name, * s3 = _original_file_name;
             while (*s1) {
-                switch (*s1) {
-                    case '.':
-                    case ' ':
-                    case '/':
-                    case '\\':
-                    case '-':
-                        *s2++ = '_';
-                        break;
-                    default:
-                        *s2++ = (char)::tolower(*s1);
-                        break;
+                if (::isalnum(*s1)) {
+                    *s2++ = static_cast<char>(::tolower(*s1));
+                } else {
+                    *s2++ = '_';
                 }
                 *s3++ = *s1++;
             }
