@@ -34,6 +34,7 @@ if (WIN32)
   add_definitions(-D_WIN32)
   add_definitions(-DUNICODE)
   add_definitions(-D_UNICODE)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 if (MSVC)
