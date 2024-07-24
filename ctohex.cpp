@@ -25,19 +25,25 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <algorithm>
-
-#include "TPL1Fl.hpp"
-#include "TPL2Fl.hpp"
-#include "TPL3Fl.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <zlib.h>
-#include <zstd.h>
-#include <lzma.h>
+
+#if defined(HAVE_ZLIB)
+#include "TPL1Fl.hpp"
+#endif
+
+#if defined (HAVE_ZSTD)
+#include "TPL2Fl.hpp"
+#endif
+
+#if defined(HAVE_LZMA)
+#include "TPL3Fl.hpp"
+#endif
 
 #define _original_file_name_size 1024
 char _original_file_name[_original_file_name_size] = { 0 };
@@ -52,10 +58,19 @@ bool _print_output0 = false;
 bool _print_output1 = false;
 bool _print_output2 = false;
 bool _print_output3 = false;
+
+bool _did_print_any_output = false;
+
+bool _use_algo0 = true;
+bool _use_algo1 = true;
+bool _use_algo2 = true;
+bool _use_algo3 = true;
+
 bool _generate_double_include_header = false;
 bool _add_write_to_file_function = false;
 bool _add_clang_gcc_nullability = false;
 bool _add_pointer = false;
+bool _write_lowercase_bytes = false;
 
 struct ResultInfo {
     size_t index;
@@ -70,8 +85,8 @@ struct ResultInfo {
         sizeLen(0),
         path(aPath),
         algo(aAlgo) {
-            char buff[32];
-            const int len = snprintf(buff, 32, "%llu", static_cast<unsigned long long>(aSize));
+            char buff[32] = { 0 };
+            const int len = ::snprintf(buff, 32, "%llu", static_cast<unsigned long long>(aSize));
             if (len > 0) {
                 sizeLen = len;
             }
@@ -91,26 +106,66 @@ void print_output_buff(const uint8_t * buff, const size_t buffSize) {
             std::cout << ' ';
         }
     }
-    std::flush(std::cout);
+}
+
+void print_output(int index, const char * algo, const uint8_t * dstBuff, const size_t dstSize, const char * outFileName) {
+    std::flush(std::cout) << "[" << index << "] " << algo << ", " << _in_file_size << " -> " << dstSize << ':' << std::endl;
+    std::string startLine;
+    {
+        const ssize_t fileLen = static_cast<ssize_t>(::strlen(outFileName) + 4); // "[ " + ... + " ]"
+        const ssize_t minsLen = (static_cast<ssize_t>(80) - fileLen) / 2;
+        std::ostringstream os;
+        for (ssize_t i = 0; i < minsLen; i++) {
+            os << '-';
+        }
+        std::flush(os) << "[ " << outFileName << " ]";
+        for (ssize_t i = 0; i < minsLen; i++) {
+            os << '-';
+        }
+        os.flush();
+        startLine = os.str();
+    }
+    
+    std::flush(std::cout) << startLine << std::endl;
+    
+    print_output_buff(dstBuff, dstSize);
+    std::flush(std::cout) << std::endl;
+    
+    for (size_t i = 0, n = startLine.size(); i < n; i++) {
+        std::cout << '-';
+    }
+    
+    std::flush(std::cout) << std::endl;
 }
 
 void write_str(FILE * f, const char * str) {
     ::fwrite(str, ::strlen(str), 1, f);
-    ::fflush(f);
 }
 
 void write_file_buff(FILE * f, const uint8_t * buff, long long buffSize) {
+    static const char * firstFormatUpper16 = "0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X";
+    static const char * nextFormatUpper16 = ",\n0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X";
+    
+    static const char * firstFormatLower16 = "0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x";
+    static const char * nextFormatLower16 = ",\n0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x";
+    
+    static const char * firstFormatUpper1 = "0x%02X";
+    static const char * nextFormatUpper1 = ",0x%02X";
+    
+    static const char * firstFormatLower1 = "0x%02x";
+    static const char * nextFormatLower1 = ",0x%02x";
+    
     char str1[1024];
     const size_t str1Size = 1024;
     
-    int first = 1;
+    size_t first = 1;
     long long written = 0;
     for (long long j = 0; j < (buffSize / 16); j++) {
         const char * format;
         if (first) {
-            format = "0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X";
+            format = _write_lowercase_bytes ? firstFormatLower16 : firstFormatUpper16;
         } else {
-            format = ",\n0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X";
+            format = _write_lowercase_bytes ? nextFormatLower16 : nextFormatUpper16;
         }
         first = 0;
         const int strLen = ::snprintf(str1, str1Size, format,
@@ -127,9 +182,9 @@ void write_file_buff(FILE * f, const uint8_t * buff, long long buffSize) {
     while (written < buffSize) {
         const char * format;
         if (first) {
-            format = "0x%02X";
+            format = _write_lowercase_bytes ? firstFormatLower1 : firstFormatUpper1;
         } else {
-            format = ",0x%02X";
+            format = _write_lowercase_bytes ? nextFormatLower1 : nextFormatUpper1;
         }
         first = 0;
         const int strLen = ::snprintf(str1, str1Size, format, *buff);
@@ -149,14 +204,14 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
         return __LINE__;
     }
     
-    char str1[4096];
+    char str1[4096] = { 0 };
     const size_t str1Size = 4096;
     
     char nonullPtr[32] = { 0 };
     if (_add_clang_gcc_nullability) {
         ::strcpy(nonullPtr, "* _Nonnull");
     } else {
-        ::strcpy(nonullPtr, "*");
+        nonullPtr[0] = '*';
     }
     
     ::snprintf(str1, str1Size, "//%i %s\n", index, _original_file_name);
@@ -264,15 +319,19 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
     }
     
     if (printOutput) {
-        std::flush(std::cout) << std::endl << "---- [" << index << "] '" << algo << "' buffer, " << _in_file_size << " -> " << dstSize << ", " << outFileName << ":" << std::endl;
-        print_output_buff(dstBuff, dstSize);
+        if (!_did_print_any_output) {
+            _did_print_any_output = true;
+            std::flush(std::cout) << std::endl << "Output buffers:" << std::endl;
+        }
+        print_output(index, algo, dstBuff, dstSize, outFileName);
     }
     
     _results.emplace_back(ResultInfo(index, dstSize, outFileName, algo));
-  
-    return 0;
+    
+    return EXIT_SUCCESS;
 }
 
+#if defined(HAVE_ZLIB)
 int write_as_zlib(void) {
     uLong buffSize = compressBound((uLong)_in_file_size);
     buffSize += 256 * 1024;
@@ -300,9 +359,11 @@ int write_as_zlib(void) {
     write_output_result(1, "z", dstBuff, dstSize);
     
     ::free(dstBuff);
-    return 0;
+    return EXIT_SUCCESS;
 }
+#endif
 
+#if defined(HAVE_ZSTD)
 int write_as_zstd(void) {
     ZSTD_CCtx * cctx = ZSTD_createCCtx();
     size_t buffSize = ZSTD_compressBound(_in_file_size);
@@ -335,9 +396,11 @@ int write_as_zstd(void) {
     
     ::free(dstBuff);
     ZSTD_freeCCtx(cctx);
-    return 0;
+    return EXIT_SUCCESS;
 }
+#endif
 
+#if defined(HAVE_LZMA)
 int write_as_lzma(void) {
     lzma_stream strm = LZMA_STREAM_INIT;
     
@@ -402,11 +465,12 @@ int write_as_lzma(void) {
     write_output_result(3, "lzma", dstBuff, dstSize);
     
     ::free(dstBuff);
-    return 0;
+    return EXIT_SUCCESS;
 }
+#endif
 
 int write_as_is(void) {
-    return write_output_result(0, "as_is", _in_file_buff, _in_file_size);
+    return write_output_result(0, "as is", _in_file_buff, _in_file_size);
 }
 
 void cleanup(void) {
@@ -417,15 +481,19 @@ void cleanup(void) {
 }
 
 void print_help(void) {
-    std::flush(std::cout) << std::endl << "Usage:" << std::endl;
+    std::flush(std::cout) << "Usage:" << std::endl;
     std::flush(std::cout) << "ctohex [OPTIONS] [INPUT FILE]" << std::endl;
     std::flush(std::cout) << "OPTIONS:" << std::endl;
-    std::flush(std::cout) << " -p  Print original and output buffers" << std::endl;
+    std::flush(std::cout) << " --help  Show this help and exit" << std::endl;
+    std::flush(std::cout) << " -h  Show this help and continue" << std::endl;
+    std::flush(std::cout) << " -a[0-3][0-3]...  Algorithm(s) to use. -a1, -a21, -a302, etc." << std::endl;
+    std::flush(std::cout) << " -p  Print output buffers" << std::endl;
+    std::flush(std::cout) << "  -p[0-3][0-3]...  With algorithm(s). -p1, -p02, -p310, etc." << std::endl;
     std::flush(std::cout) << " -d  Generate double include header" << std::endl;
     std::flush(std::cout) << " -n  Add clang/gcc nullability" << std::endl;
     std::flush(std::cout) << " -w  Add simple 'write to file' function" << std::endl;
-    std::flush(std::cout) << " -r  Add pointer variable to output buffer" << std::endl;
-    std::flush(std::cout) << std::endl;
+    std::flush(std::cout) << " -r  Add output buffer pointer variable" << std::endl;
+    std::flush(std::cout) << " -l  Write lowercase hex bytes" << std::endl;
 }
 
 bool sort_result_comparator(const ResultInfo & a, const ResultInfo & b) {
@@ -433,7 +501,6 @@ bool sort_result_comparator(const ResultInfo & a, const ResultInfo & b) {
 }
 
 void process_and_print_results(void) {
-    std::flush(std::cout);
     std::sort(_results.begin(), _results.end(), sort_result_comparator);
     
     size_t maxAlgoLen = 0, maxSizeLen = 0;
@@ -445,25 +512,38 @@ void process_and_print_results(void) {
     
     for (size_t i = 0, n = _results.size(); i < n; i++) {
         const ResultInfo & info = _results[i];
-        std::flush(std::cout) << "[" << info.index << "] " << info.size;
-        for (size_t j = info.sizeLen, m = maxSizeLen + 1; j < m; j++) {
-            std::flush(std::cout) << " ";
+        std::flush(std::cout) << '[' << info.index << "] " << info.algo;
+        for (size_t j = info.algo.size(), m = maxAlgoLen + 2; j < m; j++) {
+            std::flush(std::cout) << ' ';
         }
-        std::flush(std::cout) << info.algo;
-        for (size_t j = info.algo.size(), m = maxAlgoLen + 1; j < m; j++) {
-            std::flush(std::cout) << " ";
+        std::flush(std::cout) << info.size;
+        for (size_t j = info.sizeLen, m = maxSizeLen + 2; j < m; j++) {
+            std::flush(std::cout) << ' ';
         }
         std::flush(std::cout) << info.path << std::endl;
     }
 }
 
 int main(int argc, const char * argv[]) {
+    std::flush(std::cout) << std::endl;
+    std::flush(std::cout) << "ctohex supported algorithms: [0] as is";
+#if defined(HAVE_ZLIB)
+    std::flush(std::cout) << ", [1] z";
+#endif
+#if defined(HAVE_ZSTD)
+    std::flush(std::cout) << ", [2] zstd";
+#endif
+#if defined(HAVE_LZMA)
+    std::flush(std::cout) << ", [3] lzma";
+#endif
+    std::flush(std::cout) << std::endl;
+    
     for (int i = 1; i < argc; i++) {
         const char * arg = argv[i];
         
         if (::strcmp(arg, "--help") == 0) {
             print_help();
-            return 0;
+            return EXIT_SUCCESS;
         }
         
         if (i == (argc - 1)) {
@@ -487,12 +567,22 @@ int main(int argc, const char * argv[]) {
             }
             continue;
         }
-        
+
         const size_t argLen = ::strlen(arg);
         if ((argLen > 1) && (arg[0] == '-')) {
             for (size_t j = 1; j < argLen; j++) {
                 const char option = arg[j];
-                if (option == 'p') {
+                if (option == 'a') {
+                    _use_algo0 = _use_algo1 = _use_algo2 = _use_algo3 = false;
+                    for (size_t k = j + 1; k < argLen; k++) {
+                        const char numChar = arg[k];
+                        if (numChar == '0') { _use_algo0 = true; }
+                        else if (numChar == '1') { _use_algo1 = true; }
+                        else if (numChar == '2') { _use_algo2 = true; }
+                        else if (numChar == '3') { _use_algo3 = true; }
+                        else { k = argLen; }
+                    }
+                } else if (option == 'p') {
                     bool isSpecificOutput = false;
                     for (size_t k = j + 1; k < argLen; k++) {
                         const char numChar = arg[k];
@@ -513,6 +603,11 @@ int main(int argc, const char * argv[]) {
                     _add_clang_gcc_nullability = true;
                 } else if (option == 'r') {
                     _add_pointer = true;
+                } else if (option == 'l') {
+                    _write_lowercase_bytes = true;
+                } else if (option == 'h') {
+                    std::flush(std::cout) << std::endl;
+                    print_help();
                 }
                 
             }
@@ -523,59 +618,77 @@ int main(int argc, const char * argv[]) {
     }
     
     if (::strlen(_original_file_name) == 0 || ::strlen(_lower_case_file_name) == 0) {
+        std::flush(std::cout) << std::endl;
         print_help();
-        return 0;
+        return EXIT_SUCCESS;
     }
     
     //sprintf(_original_file_name, "");
     //sprintf(_lower_case_file_name, "");
     
-    FILE * inFile = ::fopen(_original_file_name, "rb");
-    if (!inFile) {
-        cleanup();
-        std::flush(std::cerr) << "Can't open file for reading." << std::endl;
-        return 1;
-    }
-    ::fseek(inFile, 0, SEEK_END);
-    _in_file_size = ::ftell(inFile);
-    ::fseek(inFile, 0, SEEK_SET);
-    _in_file_buff = static_cast<uint8_t *>(::malloc(_in_file_size));
-    size_t srcSize = ::fread(_in_file_buff, 1, _in_file_size, inFile);
-    ::fclose(inFile);
-    if (srcSize != _in_file_size) {
-        cleanup();
-        std::flush(std::cerr) << "Can't read file." << std::endl;
-        return 1;
+    {
+        FILE * inFile = ::fopen(_original_file_name, "rb");
+        if (!inFile) {
+            cleanup();
+            std::flush(std::cerr) << "Can't open file for reading." << std::endl;
+            return __LINE__;
+        }
+        ::fseek(inFile, 0, SEEK_END);
+        _in_file_size = ::ftell(inFile);
+        ::fseek(inFile, 0, SEEK_SET);
+        _in_file_buff = static_cast<uint8_t *>(::malloc(_in_file_size));
+        const size_t srcSize = ::fread(_in_file_buff, 1, _in_file_size, inFile);
+        ::fclose(inFile);
+        if (srcSize != _in_file_size) {
+            cleanup();
+            std::flush(std::cerr) << "Can't read file." << std::endl;
+            return __LINE__;
+        }
     }
     
     _results.reserve(4);
     
-    int res;
-    if ( (res = write_as_is()) != 0) {
+    int res = _use_algo0 ? write_as_is() : 0;
+    if (res != 0) {
         cleanup();
         return res;
     }
     
-    if ( (res = write_as_zlib()) != 0) {
+#if defined(HAVE_ZLIB)
+    res = _use_algo1 ? write_as_zlib() : 0;
+    if (res != 0) {
         cleanup();
         return res;
     }
+#endif
     
-    if ( (res = write_as_zstd()) != 0) {
+#if defined(HAVE_ZSTD)
+    res = _use_algo2 ? write_as_zstd() : 0;
+    if (res != 0) {
         cleanup();
         return res;
     }
+#endif
     
-    if ( (res = write_as_lzma()) != 0) {
+#if defined(HAVE_LZMA)
+    res = _use_algo3 ? write_as_lzma() : 0;
+    if (res != 0) {
         cleanup();
         return res;
     }
+#endif
     
     cleanup();
-    std::flush(std::cout) << std::endl << "Done" << std::endl;
     
-    process_and_print_results();
+    std::flush(std::cout) << std::endl << "Done";
+    if (_results.size() > 0) {
+        std::flush(std::cout) << ':';
+    }
     std::flush(std::cout) << std::endl;
     
-    return 0;
+    process_and_print_results();
+    
+    std::flush(std::cout) << std::endl;
+    
+    return EXIT_SUCCESS;
 }
