@@ -106,4 +106,3 @@ endif()
 if (LIBLZMA_FOUND)
   target_link_libraries(${CTOHEX_APP} ${LIBLZMA_LIBRARIES})
 endif()
-
