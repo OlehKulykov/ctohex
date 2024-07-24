@@ -168,9 +168,9 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
     ::snprintf(str1, str1Size, "#define FILE__%s_SIZE %llu\n", _lower_case_file_name, static_cast<unsigned long long>(dstSize));
     write_str(outFile, str1);
     
-    if (_add_write_to_file_function) {
-        write_str(outFile, "#include <stdbool.h>\n");
-    }
+    //if (_add_write_to_file_function) {
+    //    write_str(outFile, "#include <stdbool.h>\n");
+    //}
     
     if (_generate_double_include_header) {
         write_str(outFile, "#if defined(__cplusplus)\n");
