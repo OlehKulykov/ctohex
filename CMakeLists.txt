@@ -11,11 +11,22 @@ include(CheckLibraryExists)
 include(CheckFunctionExists)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
+include(CheckIncludeFile)
 
 message("CMake version: ${CMAKE_VERSION}")
 message("Install path: ${CMAKE_INSTALL_PREFIX}")
 message("Binary directory: ${CMAKE_BINARY_DIR}")
 message("CTest binary directory: ${CTEST_BINARY_DIRECTORY}")
+
+check_include_file("sys/types.h" HAVE_SYS_TYPES_H)
+if (HAVE_SYS_TYPES_H)
+  add_definitions(-DHAVE_SYS_TYPES_H=1)
+endif()
+
+check_include_file("sys/sys_types.h" HAVE_SYS_SYS_TYPES_H)
+if (HAVE_SYS_SYS_TYPES_H)
+  add_definitions(-DHAVE_SYS_SYS_TYPES_H=1)
+endif()
 
 if (MSVC)
 #  error("Not supported")

@@ -33,6 +33,18 @@
 #include <string.h>
 #include <ctype.h>
 
+#if !defined(__has_include)
+#define __has_include 0
+#endif
+
+#if defined(HAVE_SYS_TYPES_H) || __has_include(<sys/types.h>)
+#include <sys/types.h>
+#endif
+
+#if defined(HAVE_SYS_SYS_TYPES_H) || __has_include(<sys/sys_types.h>)
+#include <sys/sys_types.h>
+#endif
+
 #if defined(HAVE_ZLIB)
 #include "TPL1Fl.hpp"
 #endif
