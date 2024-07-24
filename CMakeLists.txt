@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 
 project(ctohex LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 11)
-
 set(CTOHEX_APP ctohex)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
