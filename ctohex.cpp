@@ -422,8 +422,8 @@ void print_help(void) {
     std::flush(std::cout) << "OPTIONS:" << std::endl;
     std::flush(std::cout) << " -p  Print original and output buffers" << std::endl;
     std::flush(std::cout) << " -d  Generate double include header" << std::endl;
-    std::flush(std::cout) << " -w  Add simple 'write to file' function" << std::endl;
     std::flush(std::cout) << " -n  Add clang/gcc nullability" << std::endl;
+    std::flush(std::cout) << " -w  Add simple 'write to file' function" << std::endl;
     std::flush(std::cout) << " -r  Add pointer variable to output buffer" << std::endl;
     std::flush(std::cout) << std::endl;
 }
