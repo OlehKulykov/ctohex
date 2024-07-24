@@ -38,13 +38,24 @@ endif()
 
 if (MSVC)
   message("MSVC")
-  if(CMAKE_BUILD_TYPE MATCHES Debug)
+  if (CMAKE_BUILD_TYPE MATCHES Debug)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MTd")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MTd")
   else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT")
   endif()
+  
+  # Always use UTF8 for sources and execution
+  # https://docs.microsoft.com/en-us/cpp/build/reference/utf-8-set-source-and-executable-character-sets-to-utf-8
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
+
+  # Disable Run-Time Type Information
+  # https://docs.microsoft.com/en-us/cpp/build/reference/gr-enable-run-time-type-information
+  # Check vs version: ?view=vs-2015
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /GR-")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 else()
   check_c_compiler_flag("-fPIC" WITH_FPIC_C)
   if (WITH_FPIC_C)
