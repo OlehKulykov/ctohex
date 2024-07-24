@@ -12,6 +12,11 @@ include(CheckFunctionExists)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
+message("CMake version: ${CMAKE_VERSION}")
+message("Install path: ${CMAKE_INSTALL_PREFIX}")
+message("Binary directory: ${CMAKE_BINARY_DIR}")
+message("CTest binary directory: ${CTEST_BINARY_DIRECTORY}")
+
 if (MSVC)
 #  error("Not supported")
 else()
@@ -106,3 +111,15 @@ endif()
 if (LIBLZMA_FOUND)
   target_link_libraries(${CTOHEX_APP} ${LIBLZMA_LIBRARIES})
 endif()
+
+enable_testing()
+
+add_test(
+  NAME "NoArgsShowHelp"
+  COMMAND $<TARGET_FILE:${CTOHEX_APP}>
+)
+
+add_test(
+  NAME "DoubleIncludeWithAllArgs"
+  COMMAND $<TARGET_FILE:${CTOHEX_APP}> -dnwr Makefile
+)
