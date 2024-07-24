@@ -13,7 +13,7 @@ include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
 if (MSVC)
-  error("Not supported")
+#  error("Not supported")
 else()
   check_c_compiler_flag("-fPIC" WITH_FPIC_C)
   if (WITH_FPIC_C)
