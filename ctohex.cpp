@@ -123,15 +123,16 @@ void print_output_buff(const uint8_t * buff, const size_t buffSize) {
 void print_output(int index, const char * algo, const uint8_t * dstBuff, const size_t dstSize, const char * outFileName) {
     std::flush(std::cout) << "[" << index << "] " << algo << ", " << _in_file_size << " -> " << dstSize << ':' << std::endl;
     std::string startLine;
+    
     {
-        const ssize_t fileLen = static_cast<ssize_t>(::strlen(outFileName) + 4); // "[ " + ... + " ]"
-        const ssize_t minsLen = (static_cast<ssize_t>(80) - fileLen) / 2;
+        const long long int fileLen = static_cast<long long int>(::strlen(outFileName) + 4); // "[ " + ... + " ]"
+        const long long int minsLen = (static_cast<long long int>(80) - fileLen) / 2;
         std::ostringstream os;
-        for (ssize_t i = 0; i < minsLen; i++) {
+        for (long long int i = 0; i < minsLen; i++) {
             os << '-';
         }
         std::flush(os) << "[ " << outFileName << " ]";
-        for (ssize_t i = 0; i < minsLen; i++) {
+        for (long long int i = 0; i < minsLen; i++) {
             os << '-';
         }
         os.flush();
