@@ -231,15 +231,18 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
     ::snprintf(str1, str1Size, "//%i %s\n", index, _original_file_name);
     write_str(outFile, str1);
     
-    ::snprintf(str1, str1Size, "#ifndef FILE__%s_SIZE\n#define FILE__%s_SIZE_SRC %lli\n", _lower_case_file_name, _lower_case_file_name, _in_file_size);
+//    if (_add_write_to_file_function) {
+//        write_str(outFile, "#include <stdbool.h>\n");
+//    }
+    
+    ::snprintf(str1, str1Size, "#ifndef FILE__%s_SIZE\n", _lower_case_file_name);
     write_str(outFile, str1);
-
+    
     ::snprintf(str1, str1Size, "#define FILE__%s_SIZE %llu\n", _lower_case_file_name, static_cast<unsigned long long>(dstSize));
     write_str(outFile, str1);
     
-    //if (_add_write_to_file_function) {
-    //    write_str(outFile, "#include <stdbool.h>\n");
-    //}
+    ::snprintf(str1, str1Size, "#define FILE__%s_SIZE_SRC %lli\n", _lower_case_file_name, _in_file_size);
+    write_str(outFile, str1);
     
     if (_generate_double_include_header) {
         write_str(outFile, "#if defined(__cplusplus)\n");
@@ -248,7 +251,7 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
         write_str(outFile, str1);
         
         if (_add_pointer) {
-            ::snprintf(str1, str1Size, "extern \"C\" const unsigned char %s FILE__%s_PTR;\n", nonullPtr, _lower_case_file_name);
+            ::snprintf(str1, str1Size, "extern \"C\" unsigned char %s FILE__%s_PTR;\n", nonullPtr, _lower_case_file_name);
             write_str(outFile, str1);
         }
         if (_add_write_to_file_function) {
@@ -262,7 +265,7 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
         write_str(outFile, str1);
         
         if (_add_pointer) {
-            ::snprintf(str1, str1Size, "extern const unsigned char %s FILE__%s_PTR;\n", nonullPtr, _lower_case_file_name);
+            ::snprintf(str1, str1Size, "extern unsigned char %s FILE__%s_PTR;\n", nonullPtr, _lower_case_file_name);
             write_str(outFile, str1);
         }
         if (_add_write_to_file_function) {
@@ -270,7 +273,7 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
             write_str(outFile, str1);
         }
         
-        write_str(outFile, "#endif\n");
+        write_str(outFile, "#endif\n#else\n");
         
         ::snprintf(str1, str1Size, "unsigned char FILE__%s[%llu] = {\n", _lower_case_file_name, static_cast<unsigned long long>(dstSize));
         write_str(outFile, str1);
@@ -279,7 +282,7 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
         write_str(outFile, "};\n");
         
         if (_add_pointer) {
-            ::snprintf(str1, str1Size, "const unsigned char %s FILE__%s_PTR = FILE__%s;\n", nonullPtr, _lower_case_file_name, _lower_case_file_name);
+            ::snprintf(str1, str1Size, "unsigned char %s FILE__%s_PTR = FILE__%s;\n", nonullPtr, _lower_case_file_name, _lower_case_file_name);
             write_str(outFile, str1);
         }
         if (_add_write_to_file_function) {
@@ -303,7 +306,7 @@ int write_output_result(const int index, const char * algo, const uint8_t * dstB
         write_str(outFile, "};\n");
         
         if (_add_pointer) {
-            ::snprintf(str1, str1Size, "static const unsigned char %s FILE__%s_PTR = FILE__%s;\n", nonullPtr, _lower_case_file_name, _lower_case_file_name);
+            ::snprintf(str1, str1Size, "static unsigned char %s FILE__%s_PTR = FILE__%s;\n", nonullPtr, _lower_case_file_name, _lower_case_file_name);
             write_str(outFile, str1);
         }
         if (_add_write_to_file_function) {
