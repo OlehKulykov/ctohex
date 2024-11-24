@@ -67,7 +67,7 @@ public:
     }
 #endif
     
-    TPL2Fl() {
+    TPL2Fl() : _dctx(NULL) { // nullptr C++11
         _dctx = ::ZSTD_createDCtx();
         if (!_dctx) {
             throw std::bad_alloc();
