@@ -81,6 +81,8 @@ source_group("main" FILES
   ctohex.cpp
 )
 
+set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX})
+
 find_package(ZLIB)
 if (ZLIB_FOUND)
   message("ZLIB found")
